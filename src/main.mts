@@ -106,11 +106,11 @@ const service: ITagService = {
       });
       sameMeta(data._meta, anchor);
       if (!Array.isArray(data.vaults) || data.vaults.length > PAGE_SIZE) {
-        throw new Error("The Silo V2 market page is invalid.");
+        throw new Error("The Silo managed-vault page is invalid.");
       }
       for (const vault of data.vaults) {
         if (!address(vault?.id) || (cursor !== null && vault.id <= cursor)) {
-          throw new Error("Silo V2 market IDs are repeated or not in cursor order.");
+          throw new Error("Silo managed-vault IDs are repeated or not in cursor order.");
         }
         tags.push(toTag(vault));
         cursor = vault.id;
@@ -118,7 +118,7 @@ const service: ITagService = {
       if (data.vaults.length < PAGE_SIZE) { complete = true; break; }
     }
     // A resource limit throws; it never returns a truncated contract set.
-    if (!complete) throw new Error("Silo V2 market pagination did not finish.");
+    if (!complete) throw new Error("Silo managed-vault pagination did not finish.");
     const seal = await query<{ _meta: Meta }>({
       query: "query Seal($block:Block_height!){_meta(block:$block){deployment hasIndexingErrors block{number hash}}}",
       variables: { block },
@@ -131,7 +131,7 @@ const service: ITagService = {
       names.set(name, (names.get(name) ?? 0) + 1);
     }
     // Metadata collisions use the complete source address as the identifier.
-    // This retains every market, without fabricated instance numbers or skips.
+    // This retains every vault, without fabricated instance numbers or skips.
     for (const tag of tags) {
       if (names.get(tag["Public Name Tag"].toLowerCase()) !== 1) {
         tag["Public Name Tag"] = "Silo " + tag["Contract Address"].split(":")[2];

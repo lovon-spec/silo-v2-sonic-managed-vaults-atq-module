@@ -28,3 +28,5 @@ All Vault rows are retrieved at one pinned block hash, with an unfiltered first 
 Names use the published vault name with a protocol prefix. Empty or unsafe name metadata uses the full contract address. Long names use the ellipsis convention. Name collisions use the complete emitted address. Every vault is retained; no fake instance number or source filter is introduced. Notes identify the contract role, underlying asset and share decimals without an endorsement.
 
 Use Yarn and yarn build. All logic is in src/main.mts, exporting only async returnTags with two string arguments. MIT licensed, authored from our own original Silo V2 module.
+
+Factory deployment history is listed in the project's [deployed-contracts documentation](https://github.com/silo-finance/silo-contracts-v3/blob/ed18f3a33be1a08e786279c50b914b1d6eaf04c7/silo-core/docs/DeployedSiloVersions.md), in the Sonic subsection under Vault factories ever deployed. This distinguishes production factories from deployment artifacts belonging to other versions or tests.
