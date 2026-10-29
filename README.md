@@ -25,7 +25,11 @@ The protocol documents the contract category in its [Silo Vaults introduction](h
 
 All Vault rows are retrieved at one pinned block hash, with an unfiltered first page and complete ascending unique-address-ID cursor pagination. A final metadata seal binds the source snapshot. Errors, unhealthy metadata, invalid identities and unfinished pagination throw. A page budget throws rather than returning partial output.
 
-Names use the published vault name with a protocol prefix. Empty or unsafe name metadata uses the full contract address. Long names use the ellipsis convention. Name collisions use the complete emitted address. Every vault is retained; no fake instance number or source filter is introduced. Notes identify the contract role, underlying asset and share decimals without an endorsement.
+Names preserve the published vault name with a protocol prefix. Long names use the permitted ellipsis convention; collisions retain the source name and add an abbreviated address, with a final collision guard. Empty names use the contract class and abbreviated address. Unsafe nonempty names throw instead of replacing an official identity. Every row is retained. The full source name remains in Public Note.
+
+Notes name Silo Finance and repeat the complete Graph vault name, including its project labels. Five product-name aliases add the manager label for names that do not contain it: Yield Optimized Sonic/USDC → Goat; Mithras → Travee; ABRC → YieldFi; Mainstreet Liquidity Vault → Braindead. These are product metadata, not tag entries: there is no contract-address lookup table or hardcoded returned address. All addresses, names and assets are constructed from current Graph responses. The aliases neither add nor filter contracts.
+
+The official Silo V2 application [configuration](https://v2.silo.finance/_next/static/chunks/1803-a0cafd21ebc74931.js) links these products to manager keys. Its [display metadata](https://v2.silo.finance/_next/static/chunks/9907-dabcbf3be07329e4.js) gives the manager names. These public sources establish the alias metadata; the module contacts only the documented Graph deployment at runtime. No additional endpoint, manager inventory request or API key is embedded.
 
 Use Yarn and yarn build. All logic is in src/main.mts, exporting only async returnTags with two string arguments. MIT licensed, authored from our own original Silo V2 module.
 

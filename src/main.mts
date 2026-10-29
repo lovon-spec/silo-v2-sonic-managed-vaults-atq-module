@@ -45,13 +45,38 @@ function plainName(value: unknown): value is string {
     !/[<\[\]`*\\_\u0000-\u001f\u007f]/.test(value);
 }
 
+// Product metadata from Silo's published vault-manager configuration. These
+// aliases contain no contract IDs and never select, insert or filter a row.
+// Every tag address, source name and asset comes from the Graph response.
+const PRODUCT_MANAGER: Readonly<Record<string, string>> = {
+  "yield optimized sonic": "Goat",
+  "yield optimized usdc": "Goat",
+  "mithras": "Travee",
+  "abrc": "YieldFi",
+  "mainstreet liquidity vault": "Braindead",
+};
+function clipped(value: string, maximum: number): string {
+  return [...value].length <= maximum ? value : [...value].slice(0, maximum - 3).join("") + "...";
+}
+function officialName(value: unknown): string {
+  if (typeof value !== "string" || [...value].length > 2048 || value.trim() && !plainName(value)) {
+    throw new Error("A nonempty Silo vault name cannot be safely preserved.");
+  }
+  return value.trim();
+}
+function instanceName(base: string, id: string): string {
+  const suffix = " " + id.slice(0, 10) + "..." + id.slice(-8);
+  return clipped(base, 50 - suffix.length) + suffix;
+}
+
 function toTag(vault: Vault): ContractTag {
   if (!address(vault.id) || !address(vault.asset?.id) ||
       !Number.isSafeInteger(vault.decimals) || vault.decimals < 0 || vault.decimals > 255) {
     throw new Error("A Silo managed vault has invalid identity or asset metadata.");
   }
-  let name = plainName(vault.name) ? `Silo Vault ${vault.name.trim()}` : `Silo ${vault.id}`;
-  if ([...name].length > 47) name = [...name].slice(0, 44).join("") + "...";
+  const sourceName = officialName(vault.name);
+  const name = sourceName ? clipped("Silo Vault " + sourceName, 50) : instanceName("Silo Vault", vault.id);
+  const alias = Object.hasOwn(PRODUCT_MANAGER, sourceName.toLowerCase()) ? PRODUCT_MANAGER[sourceName.toLowerCase()] : null;
   return {
     "Contract Address": `eip155:146:${vault.id}`,
     "Public Name Tag": name,
@@ -59,7 +84,9 @@ function toTag(vault: Vault): ContractTag {
     "UI/Website Link": "https://app.silo.finance/",
     "Public Note": `Legacy Silo managed ERC-4626 vault and ERC-20 share token. ` +
       `Permissionlessly deployed; deposits can be allocated across Silo lending markets. ` +
-      `Underlying asset: ${vault.asset.id}. Share decimals: ${vault.decimals}.`,
+      `Underlying asset: ${vault.asset.id}. Share decimals: ${vault.decimals}. ` +
+      `Protocol: Silo Finance. Source vault name: ${sourceName || "(empty)"}.` +
+      (alias ? ` Official product manager: ${alias}.` : ""),
   };
 }
 
@@ -159,12 +186,18 @@ const service: ITagService = {
       const name = tag["Public Name Tag"].toLowerCase();
       names.set(name, (names.get(name) ?? 0) + 1);
     }
-    // Metadata collisions use the complete source address as the identifier.
-    // This retains every vault, without fabricated instance numbers or skips.
+    // Preserve the source name when differentiating instances. The complete
+    // source name also remains in Public Note, including any manager label.
+    const used = new Set<string>();
     for (const tag of tags) {
       if (names.get(tag["Public Name Tag"].toLowerCase()) !== 1) {
-        tag["Public Name Tag"] = "Silo " + tag["Contract Address"].split(":")[2];
+        const id = tag["Contract Address"].split(":")[2];
+        const base = tag["Public Name Tag"];
+        tag["Public Name Tag"] = instanceName(base, id);
       }
+      const key = tag["Public Name Tag"].toLowerCase();
+      if (used.has(key)) throw new Error("Abbreviated Silo vault identities collide.");
+      used.add(key);
     }
     return tags;
   },
