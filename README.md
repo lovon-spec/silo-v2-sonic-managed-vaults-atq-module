@@ -30,3 +30,5 @@ Names use the published vault name with a protocol prefix. Empty or unsafe name 
 Use Yarn and yarn build. All logic is in src/main.mts, exporting only async returnTags with two string arguments. MIT licensed, authored from our own original Silo V2 module.
 
 Factory deployment history is listed in the project's [deployed-contracts documentation](https://github.com/silo-finance/silo-contracts-v3/blob/ed18f3a33be1a08e786279c50b914b1d6eaf04c7/silo-core/docs/DeployedSiloVersions.md), in the Sonic subsection under Vault factories ever deployed. This distinguishes production factories from deployment artifacts belonging to other versions or tests.
+
+Each query, including pacing and the response-body read, has a 30-second deadline. The complete run has a ten-minute deadline. A deadline throws without returning a partial set; native fetch cancellation is requested, and the local race also bounds fetch implementations that ignore cancellation. Use yarn build and yarn test.
